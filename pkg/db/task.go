@@ -34,11 +34,12 @@ func AddTask(task *Task) (int64, error) {
 func Tasks(limit int) ([]*Task, error) {
 
 	tasks := make([]*Task, 0)
-	query := `SELECT id, date, title, comment, repeat from scheduler ORDER BY date DESC LIMIT :limit`
+	query := `SELECT id, date, title, comment, repeat from scheduler ORDER BY date LIMIT :limit`
 	rows, err := DB.Query(query, sql.Named("limit", limit))
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	for rows.Next() {
 		var t Task
 		err := rows.Scan(&t.ID, &t.Date, &t.Title, &t.Comment, &t.Repeat)
@@ -46,6 +47,9 @@ func Tasks(limit int) ([]*Task, error) {
 			return nil, err
 		}
 		tasks = append(tasks, &t)
+	}
+	if rows.Err() != nil {
+		return nil, err
 	}
 	return tasks, nil
 }
